@@ -73,10 +73,6 @@
 # float32[] intensities
 #########################
 
-#test comment for git updating!
-#modified the file!
-
-
 import rospy
 import os
 import math
