@@ -87,10 +87,11 @@ public class PointRender : MonoBehaviour {
 						GameObject oldSphere = GameObject.Find (parsedReadings[0].ToString());
 						if(Vector3.Magnitude(coordinate - oldSphere.transform.position) > survivalMargin) //too far to live
 						{
-							Destroy(oldSphere);
-							GameObject newestSphere = (GameObject)Instantiate(spherePrefab, coordinate, Quaternion.identity);
-							newestSphere.transform.parent = pointParent.transform;
-							newestSphere.name = parsedReadings[0].ToString();
+							//Destroy(oldSphere);
+							//GameObject newestSphere = (GameObject)Instantiate(spherePrefab, coordinate, Quaternion.identity);
+							//newestSphere.transform.parent = pointParent.transform;
+							//newestSphere.name = parsedReadings[0].ToString();
+							oldSphere.transform.position = coordinate;
 						} else {
 							oldSphere.transform.position= coordinate;
 						}
@@ -124,16 +125,18 @@ public class PointRender : MonoBehaviour {
 						//print("DIFF: ");
 						//int diff = (int)Camera.main.GetComponent<RobotRender>().timestamp - (int)stamp;
 						//print(diff);
-						stamp = stamp - 100;
+						stamp = stamp - 0;
 						if(Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp)){
-							print("Found diff at stamp ");
+							//print("Found diff at stamp ");
 							//print((int)stamp);
 							cachedOdom = Camera.main.GetComponent<RobotRender>().stamps[(int)stamp];
 							wrong = false;
 						} else {
-							print("WRONG");
+							//print("WRONG");
 							wrong = true;
 						}
+					} else {
+						//print ("NOT EVEN WRONG");
 					}
 				}
 				catch (FileNotFoundException e)

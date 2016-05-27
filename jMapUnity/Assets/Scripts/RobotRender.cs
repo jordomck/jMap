@@ -64,8 +64,8 @@ public class RobotRender : MonoBehaviour {
 					//print(coords[3]);
 					timestamp = (uint)coords[3];
 				}
-				if(linesRead % 100 == 0)
-					print ("read 100 lines!");
+				//if(linesRead % 100 == 0)
+				//	print ("read 100 lines!");
 
 			}
 		}
@@ -95,19 +95,22 @@ public class RobotRender : MonoBehaviour {
 
 			}
 		}    
-		catch (EndOfStreamException e)
-		{
+		catch (EndOfStreamException e) {
 			print("ERROR: ");
 			print(e.Message);
 		}
 
 		stamps [(int)timestamp] = robot.transform;
+		if (stamps.ContainsKey ((int)timestamp - 1000)) {
+			stamps.Remove ((int)timestamp - 1000);
+		}
 
 
 	}
 
 	void Awake() {
 		robot = (GameObject)Instantiate (robotPrefab, Vector3.zero, Quaternion.identity);
+		robot.GetComponent<TrailRenderer> ().enabled = false;
 		robot.name = "robot";
 		stamps = new Dictionary<int, Transform> ();
  	}
@@ -122,6 +125,7 @@ public class RobotRender : MonoBehaviour {
 		openReader ("robotinfile.txt");
 		openRotationReader ("rotationinfile.txt");
 		tryToReadALine();
+		robot.GetComponent<TrailRenderer> ().enabled = true;
 		
 	}
 }
