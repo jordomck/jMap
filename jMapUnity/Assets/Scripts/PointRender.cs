@@ -15,7 +15,8 @@ public class PointRender : MonoBehaviour {
 	public int linesRead;
 	public GameObject robot;
 	public Transform cachedOdom;
-	public float timestamp;
+	public uint timestamp;
+	public bool wrong;
 
 
 	public void openReader(string filename)
@@ -51,20 +52,21 @@ public class PointRender : MonoBehaviour {
 		Vector2 parsedReadings = Vector2.zero;
 		try {
 			//TEMP
-			cachedOdom = robot.transform;
+			//cachedOdom = robot.transform;
 			//TEMP
 			//print("READING A LINE!");
 			string line = reader.ReadLine();
 			linesRead++;
-			if(linesRead % renderGap != 0)
+			if(linesRead % renderGap != 0 ) {
 				return;
-			if (line != null)
+			}
+			if (line != null && !wrong)
 			{
 
 				string[] readings = line.Split();
 				if(readings.Length < 2)
 				{
-					return; //this line wasn't finished being written!
+					return;
 				}
 				for(int i = 0; i < 2; i++){
 					float parsed = -1;
@@ -107,15 +109,31 @@ public class PointRender : MonoBehaviour {
 			{
 				try {
 					StreamReader moveon = new StreamReader ("infilerefresh.txt", Encoding.Default);
-					float stamp = -1;
-					float.TryParse (moveon.ReadLine (), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out stamp);
+					uint stamp = 0;
+					uint.TryParse (moveon.ReadLine (), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out stamp);
 					if(stamp > timestamp)
 					{
-						//print(stamp);
 						reader.Close();
-						clearFile ("basescaninfile.txt");
 						openReader ("basescaninfile.txt");
 						cachedOdom = robot.transform;
+						timestamp = stamp;
+						//print("LASERSTAMP: ");
+						//print(stamp);
+						//print("ROBOTSTAMP: ");
+						//print(Camera.main.GetComponent<RobotRender>().timestamp);
+						//print("DIFF: ");
+						//int diff = (int)Camera.main.GetComponent<RobotRender>().timestamp - (int)stamp;
+						//print(diff);
+						stamp = stamp - 100;
+						if(Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp)){
+							print("Found diff at stamp ");
+							//print((int)stamp);
+							cachedOdom = Camera.main.GetComponent<RobotRender>().stamps[(int)stamp];
+							wrong = false;
+						} else {
+							print("WRONG");
+							wrong = true;
+						}
 					}
 				}
 				catch (FileNotFoundException e)
@@ -136,6 +154,7 @@ public class PointRender : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
+		wrong = false;
 		numberOfSpheresCreated = 0;
 		robot = Camera.main.GetComponent<RobotRender> ().robot;
 		cachedOdom = robot.transform;

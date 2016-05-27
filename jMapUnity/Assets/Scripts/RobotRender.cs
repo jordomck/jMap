@@ -8,7 +8,8 @@ using System.IO;
 public class RobotRender : MonoBehaviour {
 	public GameObject robotPrefab;
 	public GameObject robot;
-	public float timestamp;
+	public uint timestamp;
+	public Dictionary<int, Transform> stamps;
 	public bool __________________;
 	public StreamReader reader, rotationReader;
 	public long linesRead;
@@ -49,7 +50,7 @@ public class RobotRender : MonoBehaviour {
 				// In this example, I split it into arguments based on comma
 				// deliniators, then send that array to DoStuff()
 				string[] entries = line.Split();
-				Vector4 coords = Vector3.zero;
+				Vector4 coords = Vector4.zero;
 				//print ("read a line!");
 				for(int i = 0; i < entries.Length; i++){
 					float parsed;
@@ -61,11 +62,11 @@ public class RobotRender : MonoBehaviour {
 				{
 					robot.transform.position = new Vector3(coords[0], coords[1], coords[2]);
 					//print(coords[3]);
-					timestamp = coords[3];
+					timestamp = (uint)coords[3];
 				}
 				if(linesRead % 100 == 0)
 					print ("read 100 lines!");
-			
+
 			}
 		}
 		catch (EndOfStreamException e)
@@ -90,6 +91,8 @@ public class RobotRender : MonoBehaviour {
 					robot.transform.rotation = new Quaternion(coords[0], coords[1], coords[2], coords[3]) * Quaternion.Euler (90f,0,0f);
 					//robot.transform.rotation *= Quaternion.Euler (0, 0, 0);
 				}
+
+
 			}
 		}    
 		catch (EndOfStreamException e)
@@ -98,12 +101,15 @@ public class RobotRender : MonoBehaviour {
 			print(e.Message);
 		}
 
+		stamps [(int)timestamp] = robot.transform;
+
 
 	}
 
 	void Awake() {
 		robot = (GameObject)Instantiate (robotPrefab, Vector3.zero, Quaternion.identity);
 		robot.name = "robot";
+		stamps = new Dictionary<int, Transform> ();
  	}
 	// Use this for initialization
 	void Start () {
