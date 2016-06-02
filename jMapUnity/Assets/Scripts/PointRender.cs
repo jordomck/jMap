@@ -7,16 +7,21 @@ using System.IO;
 
 public class PointRender : MonoBehaviour {
 	public float survivalMargin;
-	public GameObject spherePrefab, pointParent;
+	public GameObject spherePrefab, pointParent, lineParent;
 	public int renderGap, linesPerFrame;
+	public Material lineRendererMaterial;
 	public bool __________________;
 	public StreamReader reader;
+	public GameObject penObj;
+	public LineRenderer pen;
+	public int vertices;
 	public int numberOfSpheresCreated;
 	public int linesRead;
 	public GameObject robot;
 	public Transform cachedOdom;
 	public uint timestamp;
 	public bool wrong;
+	public Vector3 prevPos;
 
 
 	public void openReader(string filename)
@@ -44,6 +49,19 @@ public class PointRender : MonoBehaviour {
 			print(e.Message);
 		}
 
+	}
+
+	public LineRenderer makeNewLine()
+	{
+		GameObject newPenObj = new GameObject ();
+		newPenObj.name = "LineCreator";
+		newPenObj.transform.SetParent (lineParent.transform);
+		newPenObj.AddComponent<LineRenderer> ();
+		LineRenderer pencil = newPenObj.GetComponent<LineRenderer> ();
+		pencil.material = lineRendererMaterial;
+		pencil.SetWidth (0.09f, 0.09f);
+		pencil.enabled = false;
+		return pencil;
 	}
 	
 
@@ -79,6 +97,24 @@ public class PointRender : MonoBehaviour {
 					scanDirection = Quaternion.AngleAxis (Mathf.Rad2Deg * parsedReadings[0] - 90f, -cachedOdom.up) * scanDirection;
 					Debug.DrawRay(cachedOdom.position, scanDirection);
 					Vector3 coordinate = cachedOdom.position + cachedOdom.right* .2f + Vector3.Normalize(scanDirection) * parsedReadings[1];
+					Vector3 vFromPrevPos = coordinate - prevPos;
+					if(Vector3.SqrMagnitude(vFromPrevPos) > .05)
+					{
+						vertices += 1;
+						pen.SetVertexCount(vertices);
+						pen.SetPosition(vertices - 1, prevPos);
+						pen.enabled = true;
+						pen = makeNewLine();
+						vertices = 1;
+						pen.SetPosition (0, coordinate);
+					}
+					else {
+						vertices += 1;
+						pen.SetVertexCount (vertices);
+						pen.SetPosition (vertices - 1, coordinate);
+					}
+
+					prevPos = coordinate;
 					if(GameObject.Find(parsedReadings[0].ToString ()) == null){ //never seen this angle before, as at startup
 						GameObject newestSphere = (GameObject)Instantiate(spherePrefab, coordinate, Quaternion.identity);
 						newestSphere.transform.parent = pointParent.transform;
@@ -118,13 +154,6 @@ public class PointRender : MonoBehaviour {
 						openReader ("basescaninfile.txt");
 						cachedOdom = robot.transform;
 						timestamp = stamp;
-						//print("LASERSTAMP: ");
-						//print(stamp);
-						//print("ROBOTSTAMP: ");
-						//print(Camera.main.GetComponent<RobotRender>().timestamp);
-						//print("DIFF: ");
-						//int diff = (int)Camera.main.GetComponent<RobotRender>().timestamp - (int)stamp;
-						//print(diff);
 						stamp = stamp - 0;
 						if(Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp)){
 							//print("Found diff at stamp ");
@@ -157,6 +186,10 @@ public class PointRender : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
+		pen = makeNewLine();
+		//print (pen.GetType());
+		vertices = 0;
+		prevPos = new Vector3 (9999f, 9999f, 9999f);
 		wrong = false;
 		numberOfSpheresCreated = 0;
 		robot = Camera.main.GetComponent<RobotRender> ().robot;

@@ -46,9 +46,9 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\DeleteIfCollided.cs" />
      <Compile Include="Assets\Scripts\BlockFade.cs" />
      <Compile Include="Assets\Scripts\CameraFollow.cs" />
+     <Compile Include="Assets\Scripts\DeleteIfCollided.cs" />
      <Compile Include="Assets\Scripts\PointRender.cs" />
      <Compile Include="Assets\Scripts\RobotRender.cs" />
      <Compile Include="Assets\Scripts\RosStarter.cs" />

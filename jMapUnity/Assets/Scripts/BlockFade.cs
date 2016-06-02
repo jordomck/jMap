@@ -28,13 +28,15 @@ public class BlockFade : MonoBehaviour {
 			Destroy (this.gameObject);
 		} else if (Time.time - start > lifetime && castRays && !hasRendered) {
 			GameObject lineObj = (GameObject)Instantiate (lineRendPrefab, this.transform.position, Quaternion.identity);
-			lineObj.GetComponent<LineRenderer>().SetPosition(0, this.transform.position);
-			lineObj.GetComponent<LineRenderer>().SetPosition(1, robot.transform.position);
+			lineObj.GetComponent<LineRenderer> ().SetPosition (0, this.transform.position);
+			lineObj.GetComponent<LineRenderer> ().SetPosition (1, robot.transform.position);
 			this.gameObject.name = "WOW SUCH PERMANENT";
 			hasRendered = true;
 			//Destroy (this.gameObject);
-		} else if (Time.time - start > lifetime)
+		} else if (Time.time - start > lifetime + Random.insideUnitCircle.x / 2f) {
 			Destroy (this.gameObject);
+			//print ("");
+		}
 		//else if (Time.time - start > lifetime / 2f)
 		//	this.gameObject.GetComponent<MeshRenderer> ().material.color = Color.green;
 	}
