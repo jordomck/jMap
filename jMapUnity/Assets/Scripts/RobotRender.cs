@@ -8,7 +8,7 @@ using System.IO;
 public class RobotRender : MonoBehaviour {
 	public GameObject robotPrefab;
 	public GameObject robot;
-	public uint timestamp;
+	public int timestamp;
 	public Dictionary<int, Transform> stamps;
 	public bool __________________;
 	public StreamReader reader, rotationReader;
@@ -46,23 +46,18 @@ public class RobotRender : MonoBehaviour {
 			if (line != null)
 			{
 				linesRead++;
-				// Do whatever you need to do with the text line, it's a string now
-				// In this example, I split it into arguments based on comma
-				// deliniators, then send that array to DoStuff()
 				string[] entries = line.Split();
 				Vector4 coords = Vector4.zero;
-				//print ("read a line!");
 				for(int i = 0; i < entries.Length; i++){
 					float parsed;
 					float.TryParse (entries[i], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out parsed);
 					coords[i] = parsed;
-					//print(coords[i]);
 				}
 				if(entries.Length == 4)
 				{
 					robot.transform.position = new Vector3(coords[0], coords[1], coords[2]);
 					//print(coords[3]);
-					timestamp = (uint)coords[3];
+					timestamp = (int)coords[3];
 				}
 				//if(linesRead % 100 == 0)
 				//	print ("read 100 lines!");

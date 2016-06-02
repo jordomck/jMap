@@ -59,7 +59,7 @@ public class PointRender : MonoBehaviour {
 		newPenObj.AddComponent<LineRenderer> ();
 		LineRenderer pencil = newPenObj.GetComponent<LineRenderer> ();
 		pencil.material = lineRendererMaterial;
-		pencil.SetWidth (0.09f, 0.09f);
+		pencil.SetWidth (0.02f, 0.02f);
 		pencil.enabled = false;
 		return pencil;
 	}
@@ -93,10 +93,10 @@ public class PointRender : MonoBehaviour {
 				}
 				if(readings.Length == 2 && parsedReadings[1] != -1)
 				{
-					Vector3 scanDirection = cachedOdom.forward;
-					scanDirection = Quaternion.AngleAxis (Mathf.Rad2Deg * parsedReadings[0] - 90f, -cachedOdom.up) * scanDirection;
-					Debug.DrawRay(cachedOdom.position, scanDirection);
-					Vector3 coordinate = cachedOdom.position + cachedOdom.right* .2f + Vector3.Normalize(scanDirection) * parsedReadings[1];
+					Vector3 scanDirection = cachedOdom.right; //robot's forward
+					scanDirection = Quaternion.AngleAxis (Mathf.Rad2Deg * parsedReadings[0], -cachedOdom.up) * scanDirection;
+					Debug.DrawRay(cachedOdom.position + cachedOdom.right * .2f, scanDirection * parsedReadings[1]);
+					Vector3 coordinate = (cachedOdom.position + cachedOdom.right * .19f) + Vector3.Normalize(scanDirection) * parsedReadings[1];
 					Vector3 vFromPrevPos = coordinate - prevPos;
 					if(Vector3.SqrMagnitude(vFromPrevPos) > .05)
 					{
@@ -159,6 +159,9 @@ public class PointRender : MonoBehaviour {
 							//print("Found diff at stamp ");
 							//print((int)stamp);
 							cachedOdom = Camera.main.GetComponent<RobotRender>().stamps[(int)stamp];
+							wrong = false;
+						} else if (Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp - 1)) {
+							cachedOdom = Camera.main.GetComponent<RobotRender>().stamps[(int)stamp - 1];
 							wrong = false;
 						} else {
 							//print("WRONG");
