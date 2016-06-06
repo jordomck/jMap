@@ -7,7 +7,7 @@ using System.IO;
 
 public class PointRender : MonoBehaviour {
 	public float survivalMargin;
-	public GameObject spherePrefab, pointParent, lineParent;
+	public GameObject spherePrefab, pointParent, lineParent, permanentLineParent;
 	public int renderGap, linesPerFrame;
 	public Material lineRendererMaterial;
 	public bool __________________;
@@ -58,11 +58,16 @@ public class PointRender : MonoBehaviour {
 		GameObject newPenObj = new GameObject ();
 		newPenObj.name = "LineCreator";
 		newPenObj.transform.SetParent (lineParent.transform);
+
 		newPenObj.AddComponent<LineRenderer> ();
 		LineRenderer pencil = newPenObj.GetComponent<LineRenderer> ();
 		pencil.material = lineRendererMaterial;
 		pencil.SetWidth (0.05f, 0.05f);
 		pencil.enabled = false;
+		if (Input.GetKey (KeyCode.L)) {
+			newPenObj.transform.SetParent (permanentLineParent.transform);
+			pencil.enabled = true;
+		}
 		return pencil;
 	}
 	
@@ -104,7 +109,7 @@ public class PointRender : MonoBehaviour {
 						vertices += 1;
 						pen.SetVertexCount(vertices);
 						pen.SetPosition(vertices - 1, prevPos);
-						pen.enabled = true;
+						//pen.enabled = true;
 
 						pen = makeNewLine();
 						vertices = 1;
@@ -229,7 +234,7 @@ public class PointRender : MonoBehaviour {
 			counter++;
 			Destroy (child.gameObject);
 		}
-		//pen = makeNewLine ();
+		pen = makeNewLine ();
 		vertices = 0;
 	}
 
