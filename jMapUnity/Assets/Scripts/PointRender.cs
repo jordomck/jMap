@@ -11,6 +11,7 @@ public class PointRender : MonoBehaviour {
 	public int renderGap, linesPerFrame;
 	public Material lineRendererMaterial;
 	public bool __________________;
+	public string fileName;
 	public StreamReader reader;
 	public GameObject penObj;
 	public LineRenderer pen;
@@ -18,10 +19,11 @@ public class PointRender : MonoBehaviour {
 	public int numberOfSpheresCreated;
 	public int linesRead;
 	public GameObject robot;
-	public Transform cachedOdom;
+	public GameObject cachedOdom;
 	public uint timestamp;
 	public bool wrong;
 	public Vector3 prevPos;
+	int skipRender;
 
 
 	public void openReader(string filename)
@@ -59,7 +61,7 @@ public class PointRender : MonoBehaviour {
 		newPenObj.AddComponent<LineRenderer> ();
 		LineRenderer pencil = newPenObj.GetComponent<LineRenderer> ();
 		pencil.material = lineRendererMaterial;
-		pencil.SetWidth (0.02f, 0.02f);
+		pencil.SetWidth (0.05f, 0.05f);
 		pencil.enabled = false;
 		return pencil;
 	}
@@ -74,7 +76,6 @@ public class PointRender : MonoBehaviour {
 			//TEMP
 			//print("READING A LINE!");
 			string line = reader.ReadLine();
-			linesRead++;
 			if(linesRead % renderGap != 0 ) {
 				return;
 			}
@@ -93,27 +94,31 @@ public class PointRender : MonoBehaviour {
 				}
 				if(readings.Length == 2 && parsedReadings[1] != -1)
 				{
-					Vector3 scanDirection = cachedOdom.right; //robot's forward
-					scanDirection = Quaternion.AngleAxis (Mathf.Rad2Deg * parsedReadings[0], -cachedOdom.up) * scanDirection;
-					Debug.DrawRay(cachedOdom.position + cachedOdom.right * .2f, scanDirection * parsedReadings[1]);
-					Vector3 coordinate = (cachedOdom.position + cachedOdom.right * .19f) + Vector3.Normalize(scanDirection) * parsedReadings[1];
+					Vector3 scanDirection = cachedOdom.transform.right; //robot's forward
+					scanDirection = Quaternion.AngleAxis (Mathf.Rad2Deg * parsedReadings[0], -cachedOdom.transform.up) * scanDirection;
+					Debug.DrawRay(cachedOdom.transform.position + cachedOdom.transform.right * .235f, scanDirection * parsedReadings[1]);
+					Vector3 coordinate = (cachedOdom.transform.position + cachedOdom.transform.right * .235f) + Vector3.Normalize(scanDirection) * parsedReadings[1];
 					Vector3 vFromPrevPos = coordinate - prevPos;
-					if(Vector3.SqrMagnitude(vFromPrevPos) > .05)
+					if(Vector3.SqrMagnitude(vFromPrevPos) > .05 && pen != null)
 					{
 						vertices += 1;
 						pen.SetVertexCount(vertices);
 						pen.SetPosition(vertices - 1, prevPos);
 						pen.enabled = true;
+
 						pen = makeNewLine();
 						vertices = 1;
 						pen.SetPosition (0, coordinate);
 					}
-					else {
+					else if (pen != null) {
 						vertices += 1;
 						pen.SetVertexCount (vertices);
 						pen.SetPosition (vertices - 1, coordinate);
 					}
 
+					//if(!Input.GetKey (KeyCode.L))
+					//	Destroy(pen);
+					
 					prevPos = coordinate;
 					if(GameObject.Find(parsedReadings[0].ToString ()) == null){ //never seen this angle before, as at startup
 						GameObject newestSphere = (GameObject)Instantiate(spherePrefab, coordinate, Quaternion.identity);
@@ -142,30 +147,41 @@ public class PointRender : MonoBehaviour {
 				}
 				numberOfSpheresCreated++;
 			}
-			if (line == null)
+			if (linesRead >= 660)
 			{
+				//print(linesRead);
 				try {
 					StreamReader moveon = new StreamReader ("infilerefresh.txt", Encoding.Default);
 					uint stamp = 0;
-					uint.TryParse (moveon.ReadLine (), System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out stamp);
+					string moveOnString = moveon.ReadLine ();
+					string[] twoHalves = new string[2];
+					if(moveOnString != null) {
+						twoHalves = moveOnString.Split();
+						uint.TryParse (twoHalves[0], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out stamp);
+					}
 					if(stamp > timestamp)
 					{
 						reader.Close();
-						openReader ("basescaninfile.txt");
-						cachedOdom = robot.transform;
+						fileName = twoHalves[1];
+						openReader (fileName);
+						cachedOdom = new GameObject();
+						cachedOdom.transform.position = Vector3.zero;
+						cachedOdom.transform.rotation = Quaternion.identity;
 						timestamp = stamp;
-						stamp = stamp - 0;
+						stamp = stamp;
 						if(Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp)){
-							//print("Found diff at stamp ");
-							//print((int)stamp);
+							Destroy (cachedOdom);
 							cachedOdom = Camera.main.GetComponent<RobotRender>().stamps[(int)stamp];
+							print (Camera.main.GetComponent<RobotRender>().timestamp - stamp);
 							wrong = false;
 						} else if (Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp - 1)) {
+							Destroy (cachedOdom);
 							cachedOdom = Camera.main.GetComponent<RobotRender>().stamps[(int)stamp - 1];
 							wrong = false;
 						} else {
 							//print("WRONG");
 							wrong = true;
+							Destroy (cachedOdom);
 						}
 					} else {
 						//print ("NOT EVEN WRONG");
@@ -189,6 +205,7 @@ public class PointRender : MonoBehaviour {
 	
 	// Use this for initialization
 	void Start () {
+		skipRender = 0;
 		pen = makeNewLine();
 		//print (pen.GetType());
 		vertices = 0;
@@ -196,14 +213,34 @@ public class PointRender : MonoBehaviour {
 		wrong = false;
 		numberOfSpheresCreated = 0;
 		robot = Camera.main.GetComponent<RobotRender> ().robot;
-		cachedOdom = robot.transform;
-		clearFile ("basescaninfile.txt");
-		openReader("basescaninfile.txt");	
+		cachedOdom = new GameObject();
+		cachedOdom.name = "CACHEFROMPOINTRENDERSTART";
+		cachedOdom.transform.position = robot.transform.position;
+		cachedOdom.transform.rotation = robot.transform.rotation;
+		fileName = "laserScans/baseScanInfile1";
+		clearFile (fileName);
+		openReader(fileName);
+		InvokeRepeating ("grabPoints", 0f, .008f);
 	}
-	
+
+	void clearLines(){
+		int counter = 0;
+		foreach(Transform child in lineParent.transform){
+			counter++;
+			Destroy (child.gameObject);
+		}
+		//pen = makeNewLine ();
+		vertices = 0;
+	}
+
 	// Update is called once per frame
-	void Update () {
-		for(int i = 0; i < linesPerFrame; i++)
+	void grabPoints () {
+
+		skipRender++;
+		if(skipRender % 1 != 0)
+			return;
+		clearLines ();
+		for(linesRead = 0; linesRead < linesPerFrame; linesRead++)
 			tryToReadALine();
 
 	}

@@ -9,7 +9,8 @@ public class RobotRender : MonoBehaviour {
 	public GameObject robotPrefab;
 	public GameObject robot;
 	public int timestamp;
-	public Dictionary<int, Transform> stamps;
+	public Dictionary<int, GameObject> stamps;
+	public GameObject cachedOdomParent;
 	public bool __________________;
 	public StreamReader reader, rotationReader;
 	public long linesRead;
@@ -37,7 +38,7 @@ public class RobotRender : MonoBehaviour {
 			print(e.Message);
 		}
 	}
-	
+
 
 	public void tryToReadALine()
 	{
@@ -95,10 +96,27 @@ public class RobotRender : MonoBehaviour {
 			print(e.Message);
 		}
 
-		stamps [(int)timestamp] = robot.transform;
-		if (stamps.ContainsKey ((int)timestamp - 1000)) {
-			stamps.Remove ((int)timestamp - 1000);
-		}
+
+
+
+
+		GameObject cachedTransform = new GameObject();
+		cachedTransform.name = "CACHE";
+		cachedTransform.transform.position = robot.transform.position;
+		cachedTransform.transform.rotation = robot.transform.rotation;
+		cachedTransform.transform.parent = cachedOdomParent.transform;
+		//cachedTransform.position = robot.transform.position;
+		//cachedTransform.rotation = robot.transform.rotation;
+		stamps [(int)timestamp] = cachedTransform;
+
+
+
+
+
+
+
+
+
 
 
 	}
@@ -107,21 +125,33 @@ public class RobotRender : MonoBehaviour {
 		robot = (GameObject)Instantiate (robotPrefab, Vector3.zero, Quaternion.identity);
 		robot.GetComponent<TrailRenderer> ().enabled = false;
 		robot.name = "robot";
-		stamps = new Dictionary<int, Transform> ();
+		stamps = new Dictionary<int, GameObject> ();
+
  	}
 	// Use this for initialization
 	void Start () {
 
 		openReader("robotinfile.txt");	
+		InvokeRepeating ("GrabOdom", 0f, 1f / 200f);
+		InvokeRepeating ("ClearCache", 0f, 3f);
 	}
 	
 	// Update is called once per frame
-	void Update () {
+	void GrabOdom() {
+		//Camera.main.transform.SetParent (robot.transform);
 		openReader ("robotinfile.txt");
 		openRotationReader ("rotationinfile.txt");
 		tryToReadALine();
 		robot.GetComponent<TrailRenderer> ().enabled = true;
 		
+	}
+
+	void ClearCache() {
+		foreach (Transform childTransform in cachedOdomParent.transform) {
+			Destroy (childTransform.gameObject);
+		}
+		stamps.Clear ();
+	
 	}
 }
 
