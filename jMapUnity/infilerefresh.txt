@@ -1,1 +1,1 @@
-1890742 /home/jordan/jMap/jMapUnity/laserScans/baseScanInfile219.txt
+1326829 /home/jordan/jMap/jMapUnity/laserScans/baseScanInfile174.txt

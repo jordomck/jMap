@@ -46,6 +46,7 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\ICP.cs" />
      <Compile Include="Assets\Scripts\BlockFade.cs" />
      <Compile Include="Assets\Scripts\CameraFollow.cs" />
      <Compile Include="Assets\Scripts\DeleteIfCollided.cs" />
@@ -53,6 +54,7 @@
      <Compile Include="Assets\Scripts\RobotRender.cs" />
      <Compile Include="Assets\Scripts\RosStarter.cs" />
      <Compile Include="Assets\Scripts\SphereDarken.cs" />
+     <Compile Include="Assets\odomStorer.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>/opt/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>
@@ -61,6 +63,12 @@
  </Reference>
  <Reference Include="UnityEngine.Analytics">
  <HintPath>/opt/Unity/Editor/Data/UnityExtensions/Unity/UnityAnalytics/UnityEngine.Analytics.dll</HintPath>
+ </Reference>
+ <Reference Include="alglibnet2">
+ <HintPath>/home/jordan/jMap/jMapUnity/Assets/alglibnet2.dll</HintPath>
+ </Reference>
+ <Reference Include="alglibnet2">
+ <HintPath>/home/jordan/jMap/jMapUnity/Assets/AlgLib DLL/alglibnet2.dll</HintPath>
  </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
