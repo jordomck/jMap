@@ -24,8 +24,6 @@ public class SphereDarken : MonoBehaviour {
 		float percentDarkened = distanceToRobot / maxDarkenDistance;
 		if (percentDarkened > 1f)
 			percentDarkened = 1f;
-		//print (percentDarkened);
-		float color = 350f - 400f * percentDarkened;
 		rend.material.color = new Color (percentDarkened, percentDarkened, percentDarkened);
 		
 	}

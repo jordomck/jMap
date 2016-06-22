@@ -70,14 +70,15 @@
 -define:UNITY_EDITOR
 -define:UNITY_EDITOR_64
 -define:UNITY_EDITOR_LINUX
-Assets/ICP.cs
 Assets/Scripts/BlockFade.cs
 Assets/Scripts/CameraFollow.cs
 Assets/Scripts/DeleteIfCollided.cs
+Assets/Scripts/ICP.cs
 Assets/Scripts/PointRender.cs
 Assets/Scripts/RobotRender.cs
 Assets/Scripts/RosStarter.cs
 Assets/Scripts/SphereDarken.cs
-Assets/odomStorer.cs
+Assets/Scripts/countChildren.cs
+Assets/Scripts/odomStorer.cs
 -r:/opt/Unity/Editor/Data/Mono/lib/mono/unity/System.Runtime.Serialization.dll
 -r:/opt/Unity/Editor/Data/Mono/lib/mono/unity/System.Xml.Linq.dll

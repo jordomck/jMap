@@ -46,15 +46,16 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\ICP.cs" />
      <Compile Include="Assets\Scripts\BlockFade.cs" />
      <Compile Include="Assets\Scripts\CameraFollow.cs" />
      <Compile Include="Assets\Scripts\DeleteIfCollided.cs" />
+     <Compile Include="Assets\Scripts\ICP.cs" />
      <Compile Include="Assets\Scripts\PointRender.cs" />
      <Compile Include="Assets\Scripts\RobotRender.cs" />
      <Compile Include="Assets\Scripts\RosStarter.cs" />
      <Compile Include="Assets\Scripts\SphereDarken.cs" />
-     <Compile Include="Assets\odomStorer.cs" />
+     <Compile Include="Assets\Scripts\countChildren.cs" />
+     <Compile Include="Assets\Scripts\odomStorer.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>/opt/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>

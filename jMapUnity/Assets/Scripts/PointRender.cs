@@ -8,7 +8,8 @@ using System.IO;
 public class PointRender : MonoBehaviour {
 	public float survivalMargin;  //the distance a point needs to move from the last iteration in order to be deleted and remade
 	public GameObject spherePrefab, pointParent, lineParent, permanentLineParent, parentA, parentB;
-	public int renderGap, linesPerFrame; //rendergap displays one of each X laser beams. Linesperframe should be consistent at 662.
+	public int renderGap, linesPerFrame;
+	public uint timeTravelAmount; //rendergap displays one of each X laser beams. Linesperframe should be consistent at 662.
 	public Material lineRendererMaterial;
 	public bool __________________;
 	public bool stopRendering; //this turns on when 's' is pressed. It removes all points, and stops more from spawning
@@ -105,7 +106,7 @@ public class PointRender : MonoBehaviour {
 					//rotate scan direction by the reported scan angle
 					scanDirection = Quaternion.AngleAxis (Mathf.Rad2Deg * parsedReadings[0], -cachedOdom.transform.up) * scanDirection;
 					//draw a ray of the laser scan
-					Debug.DrawRay(cachedOdom.transform.position + cachedOdom.transform.right * .235f, scanDirection * parsedReadings[1]);
+					//Debug.DrawRay(cachedOdom.transform.position + cachedOdom.transform.right * .235f, scanDirection * parsedReadings[1]);
 					//add the translation of the robot
 					Vector3 coordinate = (cachedOdom.transform.position + cachedOdom.transform.right * .235f) + Vector3.Normalize(scanDirection) * parsedReadings[1];
 
@@ -153,7 +154,7 @@ public class PointRender : MonoBehaviour {
 					}
 
 					//if we requested a sample, send a copy over to parentA or parentB for storage
-					if((grabSampleA || grabSampleB) && Mathf.Abs(parsedReadings[0]) < 12f){
+					if((grabSampleA || grabSampleB)){
 						GameObject duplicatedSphere = (GameObject)Instantiate((Object)relevantSphere, relevantSphere.transform.position, relevantSphere.transform.rotation);
 						duplicatedSphere.GetComponent<BlockFade>().enabled = false;
 						if(grabSampleA) {
@@ -163,7 +164,7 @@ public class PointRender : MonoBehaviour {
 						else if (grabSampleB) {
 							duplicatedSphere.transform.parent = parentB.transform;
 							duplicatedSphere.GetComponent<MeshRenderer>().material.color = Color.green;
-							duplicatedSphere.transform.localScale = duplicatedSphere.transform.localScale * 1.1f;
+							//duplicatedSphere.transform.localScale = duplicatedSphere.transform.localScale * 1.1f;
 						}
 					}
 
@@ -192,33 +193,36 @@ public class PointRender : MonoBehaviour {
 						cachedOdom.transform.position = Vector3.zero;
 						cachedOdom.transform.rotation = Quaternion.identity;
 						timestamp = stamp;
-						stamp = stamp;
+						stamp = stamp - timeTravelAmount;
 						if(Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp)){
 							Destroy (cachedOdom);
 							cachedOdom = Camera.main.GetComponent<RobotRender>().stamps[(int)stamp];
-							print (Camera.main.GetComponent<RobotRender>().timestamp - stamp);
+							//print (Camera.main.GetComponent<RobotRender>().timestamp - stamp);
 							wrong = false;
 							grabSampleA = false;
 							grabSampleB = false;
 							if(Input.GetKey (KeyCode.A)){
+								//pointParent.SetActive(false);
 								clearChildren(parentA);
 								grabSampleA = true;
 								parentA.GetComponent<odomStorer>().cachedOdom = cachedOdom.transform;
 								parentA.transform.position = cachedOdom.transform.position;
 							}
-							else if(Input.GetKey(KeyCode.B)){
+							else if(!Input.GetKey(KeyCode.B) && parentA.transform.childCount > 0){
 								clearChildren(parentB);
 								grabSampleB = true;
 								parentB.GetComponent<odomStorer>().cachedOdom = cachedOdom.transform;
 								parentB.transform.position = cachedOdom.transform.position;
 							}
-						} else if (Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp - 1)) {
+						}/* else if (Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp - 1)) {
 							Destroy (cachedOdom);
 							cachedOdom = Camera.main.GetComponent<RobotRender>().stamps[(int)stamp - 1];
 							wrong = false;
-						} else {
+						} */else {
 							//print("WRONG");
 							wrong = true;
+							cachedOdom.transform.position = robot.transform.position;
+							cachedOdom.transform.rotation = robot.transform.rotation;
 							Destroy (cachedOdom);
 						}
 					} else {
@@ -259,7 +263,7 @@ public class PointRender : MonoBehaviour {
 		fileName = "laserScans/baseScanInfile1";
 		clearFile (fileName);
 		openReader(fileName);
-		InvokeRepeating ("grabPoints", 0f, .008f);
+		InvokeRepeating ("grabPoints", 0f, .2f);
 	}
 
 	void clearLines(){
@@ -290,6 +294,15 @@ public class PointRender : MonoBehaviour {
 		clearLines ();
 		for(linesRead = 0; linesRead < linesPerFrame; linesRead++)
 			tryToReadALine();
+		if (parentB.transform.childCount > 0) {
+			if(Camera.main.GetComponent<ICP>().runICP()){
+				Camera.main.GetComponent<ICP>().transferParenthood();
+			}
+			else{
+				clearChildren(parentB);
+			}
+		}
+
 
 	}
 

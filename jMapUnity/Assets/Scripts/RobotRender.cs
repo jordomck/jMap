@@ -132,8 +132,8 @@ public class RobotRender : MonoBehaviour {
 	void Start () {
 
 		openReader("robotinfile.txt");	
-		InvokeRepeating ("GrabOdom", 0f, 1f / 200f);
-		InvokeRepeating ("ClearCache", 0f, 3f);
+		InvokeRepeating ("GrabOdom", 0f, 1f / 300f);
+		InvokeRepeating ("ClearCache", 0f, 6f);
 	}
 	
 	// Update is called once per frame
