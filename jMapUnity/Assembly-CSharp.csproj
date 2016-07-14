@@ -55,6 +55,8 @@
      <Compile Include="Assets\Scripts\RosStarter.cs" />
      <Compile Include="Assets\Scripts\SphereDarken.cs" />
      <Compile Include="Assets\Scripts\countChildren.cs" />
+     <Compile Include="Assets\Scripts\floorLimit.cs" />
+     <Compile Include="Assets\Scripts\imager.cs" />
      <Compile Include="Assets\Scripts\odomStorer.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>/opt/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>

@@ -9,8 +9,10 @@ public class PointRender : MonoBehaviour {
 	public float survivalMargin;  //the distance a point needs to move from the last iteration in order to be deleted and remade
 	public GameObject spherePrefab, pointParent, lineParent, permanentLineParent, parentA, parentB;
 	public int renderGap, linesPerFrame;
+	public bool goHam;
 	public uint timeTravelAmount; //rendergap displays one of each X laser beams. Linesperframe should be consistent at 662.
 	public Material lineRendererMaterial;
+	public bool seeMainSpheres;
 	public bool __________________;
 	public bool stopRendering; //this turns on when 's' is pressed. It removes all points, and stops more from spawning
 	public bool grabSampleA, grabSampleB; 
@@ -22,6 +24,7 @@ public class PointRender : MonoBehaviour {
 	public int numberOfSpheresCreated; 
 	public int linesRead;
 	public GameObject robot;
+	public bool doneReading;
 	public GameObject cachedOdom; //stores transform of robot sometime in the past, when laser scan was evaluated
 	public uint timestamp; //most recently read stamp from manager file
 	public bool wrong; //if wrong, we didn't have stored odometry from when the laser scan occurred, so we can't safely render.
@@ -100,7 +103,7 @@ public class PointRender : MonoBehaviour {
 					float.TryParse (readings[i], System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out parsed);
 					parsedReadings[i] = parsed;
 				}
-				if(readings.Length == 2 && parsedReadings[1] != -1) //if [1] is -1, the original data was NaN and we can't render it.
+				if(readings.Length == 2 && parsedReadings[1] != -1 && parsedReadings[1] > .4f) //if [1] is -1, the original data was NaN and we can't render it. This also removes nearby duds.
 				{
 					Vector3 scanDirection = cachedOdom.transform.right; //robot's +x direction is forward from ROS perspective
 					//rotate scan direction by the reported scan angle
@@ -110,6 +113,7 @@ public class PointRender : MonoBehaviour {
 					//add the translation of the robot
 					Vector3 coordinate = (cachedOdom.transform.position + cachedOdom.transform.right * .235f) + Vector3.Normalize(scanDirection) * parsedReadings[1];
 
+					/*
 					//draw lines
 					Vector3 vFromPrevPos = coordinate - prevPos;
 					if(Vector3.SqrMagnitude(vFromPrevPos) > .05 && pen != null) //line segment too far to continue, time to begin a new line
@@ -129,11 +133,13 @@ public class PointRender : MonoBehaviour {
 						pen.SetPosition (vertices - 1, coordinate);
 					}
 					prevPos = coordinate; //cache this for the next iteration so we can connect it to the next dot.
+					*/
 
 
 					GameObject relevantSphere = GameObject.Find (parsedReadings[0].ToString ()); //pointer for copying to parentA or parentB
 					if(GameObject.Find(parsedReadings[0].ToString ()) == null){ //never seen this angle before, as at startup
 						GameObject newestSphere = (GameObject)Instantiate(spherePrefab, coordinate, Quaternion.identity);
+						newestSphere.GetComponent<MeshRenderer>().enabled = seeMainSpheres;
 						newestSphere.transform.parent = pointParent.transform;
 						newestSphere.name = parsedReadings[0].ToString();
 						relevantSphere = newestSphere;
@@ -159,11 +165,12 @@ public class PointRender : MonoBehaviour {
 						duplicatedSphere.GetComponent<BlockFade>().enabled = false;
 						if(grabSampleA) {
 							duplicatedSphere.transform.parent = parentA.transform;
-							duplicatedSphere.GetComponent<MeshRenderer>().material.color = Color.red;
+							duplicatedSphere.GetComponent<MeshRenderer>().material.color = Color.black;
 						}
 						else if (grabSampleB) {
 							duplicatedSphere.transform.parent = parentB.transform;
 							duplicatedSphere.GetComponent<MeshRenderer>().material.color = Color.green;
+							duplicatedSphere.GetComponent<MeshRenderer>().enabled = true;
 							//duplicatedSphere.transform.localScale = duplicatedSphere.transform.localScale * 1.1f;
 						}
 					}
@@ -171,7 +178,7 @@ public class PointRender : MonoBehaviour {
 				}
 				numberOfSpheresCreated++;
 			}
-			if (linesRead >= 660) //reached EOF, time to spam requests to the moveon file until it gives us the go-ahead to get new laser data
+			if (linesRead >= linesPerFrame - 1 || reader.EndOfStream) //reached EOF, time to spam requests to the moveon file until it gives us the go-ahead to get new laser data
 			{
 				//print(linesRead);
 				try {
@@ -194,9 +201,10 @@ public class PointRender : MonoBehaviour {
 						cachedOdom.transform.rotation = Quaternion.identity;
 						timestamp = stamp;
 						stamp = stamp - timeTravelAmount;
-						if(Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp)){
+						for(int i = 0; i < 2; i++){
+						if(Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp - i)){
 							Destroy (cachedOdom);
-							cachedOdom = Camera.main.GetComponent<RobotRender>().stamps[(int)stamp];
+							cachedOdom = Camera.main.GetComponent<RobotRender>().stamps[(int)stamp - i];
 							//print (Camera.main.GetComponent<RobotRender>().timestamp - stamp);
 							wrong = false;
 							grabSampleA = false;
@@ -213,18 +221,17 @@ public class PointRender : MonoBehaviour {
 								grabSampleB = true;
 								parentB.GetComponent<odomStorer>().cachedOdom = cachedOdom.transform;
 								parentB.transform.position = cachedOdom.transform.position;
-							}
-						}/* else if (Camera.main.GetComponent<RobotRender>().stamps.ContainsKey((int)stamp - 1)) {
-							Destroy (cachedOdom);
-							cachedOdom = Camera.main.GetComponent<RobotRender>().stamps[(int)stamp - 1];
-							wrong = false;
-						} */else {
+							} 
+								break;
+						} else {
 							//print("WRONG");
 							wrong = true;
 							cachedOdom.transform.position = robot.transform.position;
 							cachedOdom.transform.rotation = robot.transform.rotation;
 							Destroy (cachedOdom);
 						}
+					}
+
 					} else {
 						//print ("NOT EVEN WRONG");
 					}
@@ -263,7 +270,7 @@ public class PointRender : MonoBehaviour {
 		fileName = "laserScans/baseScanInfile1";
 		clearFile (fileName);
 		openReader(fileName);
-		InvokeRepeating ("grabPoints", 0f, .2f);
+		InvokeRepeating ("grabPoints", 0f, .04f);
 	}
 
 	void clearLines(){
@@ -286,16 +293,19 @@ public class PointRender : MonoBehaviour {
 		}
 	}
 
-	// Update is called once per frame
+
 	void grabPoints () {
 		skipRender++;
 		if(skipRender % 1 != 0 || stopRendering)
 			return;
-		clearLines ();
-		for(linesRead = 0; linesRead < linesPerFrame; linesRead++)
-			tryToReadALine();
-		if (parentB.transform.childCount > 0) {
-			if(Camera.main.GetComponent<ICP>().runICP()){
+		//clearLines ();
+		for (linesRead = 0; linesRead < linesPerFrame; linesRead++) {
+			//doneReading = false;
+			//while(!doneReading)
+			tryToReadALine ();
+		}
+		if (parentB.transform.childCount > 100 && goHam) {
+			if(Camera.main.GetComponent<ICP>().runICP(true)){
 				Camera.main.GetComponent<ICP>().transferParenthood();
 			}
 			else{
@@ -306,7 +316,7 @@ public class PointRender : MonoBehaviour {
 
 	}
 
-	void clearChildren(GameObject parent) {
+	public void clearChildren(GameObject parent) {
 		foreach (Transform child in parent.transform) {
 			Destroy (child.gameObject);
 		}
